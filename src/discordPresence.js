@@ -7,11 +7,15 @@ const RPC = require('@xhayper/discord-rpc');
 const DEFAULT_CLIENT_ID = '1324729144424271974';
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || DEFAULT_CLIENT_ID;
 
+const PAUSE_CLEAR_MS = 10 * 60 * 1000; // clear the status after this long paused
+
 class DiscordPresence {
   constructor(settings) {
     this.settings = settings;
     this.client = null;
     this.ready = false;
+    this.pausedSince = null;
+    this.clearedForIdle = false;
   }
 
   connect() {
@@ -45,7 +49,24 @@ class DiscordPresence {
 
     if (!track || !track.title) {
       await this.client.user.clearActivity().catch(() => {});
+      this.pausedSince = null;
+      this.clearedForIdle = false;
       return;
+    }
+
+    if (track.isPaused) {
+      if (this.pausedSince == null) this.pausedSince = Date.now();
+      if (Date.now() - this.pausedSince >= PAUSE_CLEAR_MS) {
+        if (!this.clearedForIdle) {
+          await this.client.user.clearActivity().catch(() => {});
+          this.clearedForIdle = true;
+          console.log('[discord] cleared status after being paused a while');
+        }
+        return;
+      }
+    } else {
+      this.pausedSince = null;
+      this.clearedForIdle = false;
     }
 
     const cfg = this.settings.all();
