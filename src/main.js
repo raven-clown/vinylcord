@@ -16,6 +16,17 @@ let lastTrack = null;
 const ICON_PATH = path.join(__dirname, '..', 'assets', 'icon.png');
 const UPDATE_CHECK_INTERVAL_MS = 2 * 60 * 60 * 1000; // re-check every 2 hours while running
 
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (!ytWindow) return;
+    if (ytWindow.isMinimized()) ytWindow.restore();
+    ytWindow.show();
+    ytWindow.focus();
+  });
+}
+
 function createYtWindow() {
   ytWindow = new BrowserWindow({
     width: 1360,
@@ -41,12 +52,6 @@ function createYtWindow() {
     console.log('[preload-error]', preloadPath, error);
   });
 
-  ytWindow.on('close', (event) => {
-    if (!app.isQuitting) {
-      event.preventDefault();
-      ytWindow.hide();
-    }
-  });
 }
 
 function showAndOpenPanel() {
@@ -66,10 +71,7 @@ function createTray() {
     { type: 'separator' },
     {
       label: 'Quit',
-      click: () => {
-        app.isQuitting = true;
-        app.quit();
-      },
+      click: () => app.quit(),
     },
   ]);
 
@@ -103,14 +105,12 @@ ipcMain.on('copy-to-clipboard', (_event, text) => {
 });
 
 ipcMain.on('quit-app', () => {
-  app.isQuitting = true;
   app.quit();
 });
 
 ipcMain.handle('get-app-version', () => app.getVersion());
 
 ipcMain.on('install-update', () => {
-  app.isQuitting = true;
   autoUpdater.quitAndInstall();
 });
 
@@ -140,8 +140,8 @@ app.whenReady().then(() => {
   }
 });
 
-app.on('window-all-closed', (event) => {
-  event.preventDefault();
+app.on('window-all-closed', () => {
+  app.quit();
 });
 
 app.on('before-quit', () => {
