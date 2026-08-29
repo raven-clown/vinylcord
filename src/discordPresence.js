@@ -71,6 +71,7 @@ class DiscordPresence {
 
     const cfg = this.settings.all();
     const activity = {
+      type: 2, // Listening
       details: track.title.slice(0, 128),
       state: (track.artist || 'Unknown artist').slice(0, 128),
       largeImageKey: track.artwork || undefined,
