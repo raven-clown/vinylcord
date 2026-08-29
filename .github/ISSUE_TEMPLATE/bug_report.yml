@@ -1,0 +1,57 @@
+name: Bug report
+description: Something isn't working the way it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. A little detail goes a long way toward getting it fixed.
+
+  - type: input
+    id: version
+    attributes:
+      label: Vinylcord version
+      description: Check the footer of the Settings window, or the version field in package.json
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Anything printed in the terminal when running `npm start`
+      render: shell
+    validations:
+      required: false

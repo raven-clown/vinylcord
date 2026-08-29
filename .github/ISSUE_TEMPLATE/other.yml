@@ -1,0 +1,9 @@
+name: Something else
+description: Anything that doesn't fit a bug report or feature request
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: What's on your mind?
+    validations:
+      required: true
