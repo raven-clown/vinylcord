@@ -14,6 +14,7 @@ let lastTrackAt = 0;
 let lastTrack = null;
 
 const ICON_PATH = path.join(__dirname, '..', 'assets', 'icon.png');
+const UPDATE_CHECK_INTERVAL_MS = 2 * 60 * 60 * 1000; // re-check every 2 hours while running
 
 function createYtWindow() {
   ytWindow = new BrowserWindow({
@@ -127,9 +128,15 @@ app.whenReady().then(() => {
     autoUpdater.on('update-downloaded', () => {
       ytWindow.webContents.send('update-ready');
     });
-    autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-      console.error('[updater] check failed:', err.message);
-    });
+
+    const checkForUpdates = () => {
+      autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+        console.error('[updater] check failed:', err.message);
+      });
+    };
+
+    checkForUpdates();
+    setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL_MS);
   }
 });
 
