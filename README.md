@@ -6,7 +6,7 @@ Show what's playing on YouTube Music as a live status on Discord, with a spinnin
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![Built with Electron](https://img.shields.io/badge/built%20with-Electron-47848F)
 
-![Vinylcord settings panel](assets/screenshots/settings.png)
+![Vinylcord showing on an actual Discord profile](assets/screenshots/discord-card.png)
 
 ## What it does
 
@@ -15,6 +15,7 @@ Vinylcord is a small desktop app that wraps YouTube Music. Open it, sign in like
 - **Discord Rich Presence** — song, artist, album art, a real elapsed/duration bar, a play/pause indicator, and a "Listen Along" button that opens the track.
 - **A streaming overlay** — a spinning vinyl record, an animated waveform, and the current lyric line, served as a local page you can drop into OBS or Streamlabs as a Browser Source.
 
+![Vinylcord settings panel](assets/screenshots/settings.png)
 ![Overlay widget on a stream background](assets/screenshots/overlay.png)
 
 ## Download
