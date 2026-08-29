@@ -10,9 +10,19 @@ const { rcedit } = require('rcedit');
 module.exports = async function afterPack(context) {
   if (context.electronPlatformName !== 'win32') return;
 
-  const exePath = path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.exe`);
+  const { appInfo } = context.packager;
+  const exePath = path.join(context.appOutDir, `${appInfo.productFilename}.exe`);
+
   await rcedit(exePath, {
     icon: path.join(__dirname, '..', 'assets', 'icon.ico'),
+    'version-string': {
+      FileDescription: appInfo.description || appInfo.productName,
+      ProductName: appInfo.productName,
+      CompanyName: appInfo.companyName || appInfo.productName,
+      LegalCopyright: appInfo.copyright,
+    },
+    'file-version': appInfo.version,
+    'product-version': appInfo.version,
   });
-  console.log('[afterPack] set icon on', exePath);
+  console.log('[afterPack] set icon and version info on', exePath);
 };
