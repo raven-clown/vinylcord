@@ -1,6 +1,6 @@
 {
   "name": "vinylcord",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Show what you're listening to on YouTube Music as a live Discord Rich Presence status.",
   "main": "src/main.js",
   "author": "",
@@ -39,8 +39,8 @@
       "signAndEditExecutable": false
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Vinylcord"

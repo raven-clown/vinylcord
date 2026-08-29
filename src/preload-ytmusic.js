@@ -144,8 +144,13 @@ const PANEL_HTML = `
 
   </div>
 
+  <div id="vc-update-banner">
+    <span>Update ready</span>
+    <span id="vc-install-update">Restart &amp; install</span>
+  </div>
+
   <div id="vc-footer">
-    <span style="font-size:11px; color:#6d6f78;">v0.1.0</span>
+    <span id="vc-version" style="font-size:11px; color:#6d6f78;"></span>
     <span id="vc-quit" style="font-size:12px; font-weight:500; color:#f23f42; cursor:pointer;">Quit</span>
   </div>
 </div>
@@ -215,6 +220,16 @@ const PANEL_CSS = `
 .vc-lyric-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid #1e1f22; display: none; align-items: center; gap: 6px; }
 .vc-lyric-row span { font-size: 11px; color: #b5bac1; font-style: italic; }
 #vc-footer { padding: 10px 16px; border-top: 1px solid #2b2d31; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+#vc-update-banner {
+  display: none; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: #2b3a99; flex-shrink: 0; font-size: 12px;
+}
+#vc-update-banner.vc-show { display: flex; }
+#vc-update-banner span:first-child { color: #dbdee1; font-weight: 500; }
+#vc-install-update {
+  background: #ffffff; color: #2b3a99; font-weight: 600; padding: 5px 10px;
+  border-radius: 4px; cursor: pointer;
+}
 `;
 
 // YouTube Music enforces a Trusted Types CSP, which blocks assigning
@@ -338,6 +353,18 @@ function injectPanel() {
 
   document.getElementById('vc-quit').addEventListener('click', () => {
     ipcRenderer.send('quit-app');
+  });
+
+  ipcRenderer.invoke('get-app-version').then((version) => {
+    document.getElementById('vc-version').textContent = 'v' + version;
+  });
+
+  ipcRenderer.on('update-ready', () => {
+    document.getElementById('vc-update-banner').classList.add('vc-show');
+    panel.classList.add('vc-open');
+  });
+  document.getElementById('vc-install-update').addEventListener('click', () => {
+    ipcRenderer.send('install-update');
   });
 
   const TOGGLE_IDS = ['showTimestamps', 'showListenAlongButton', 'showLyrics'];

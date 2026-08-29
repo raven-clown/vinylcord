@@ -106,6 +106,13 @@ ipcMain.on('quit-app', () => {
   app.quit();
 });
 
+ipcMain.handle('get-app-version', () => app.getVersion());
+
+ipcMain.on('install-update', () => {
+  app.isQuitting = true;
+  autoUpdater.quitAndInstall();
+});
+
 app.whenReady().then(() => {
   settings = new Settings();
   discord = new DiscordPresence(settings);
@@ -117,6 +124,9 @@ app.whenReady().then(() => {
   overlay.start();
 
   if (app.isPackaged) {
+    autoUpdater.on('update-downloaded', () => {
+      ytWindow.webContents.send('update-ready');
+    });
     autoUpdater.checkForUpdatesAndNotify().catch((err) => {
       console.error('[updater] check failed:', err.message);
     });
