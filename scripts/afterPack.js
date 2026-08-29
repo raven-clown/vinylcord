@@ -13,13 +13,21 @@ module.exports = async function afterPack(context) {
   const { appInfo } = context.packager;
   const exePath = path.join(context.appOutDir, `${appInfo.productFilename}.exe`);
 
+  const exeName = `${appInfo.productFilename}.exe`;
+
   await rcedit(exePath, {
     icon: path.join(__dirname, '..', 'assets', 'icon.ico'),
     'version-string': {
-      FileDescription: appInfo.description || appInfo.productName,
+      FileDescription: appInfo.productName,
       ProductName: appInfo.productName,
       CompanyName: appInfo.companyName || appInfo.productName,
       LegalCopyright: appInfo.copyright,
+      // Task Manager groups same-named processes by these two fields,
+      // not FileDescription - Electron's default build leaves them as
+      // "electron.exe", which is why the app kept showing up grouped
+      // under "Electron" even after the fields above were fixed.
+      InternalName: exeName,
+      OriginalFilename: exeName,
     },
     'file-version': appInfo.version,
     'product-version': appInfo.version,
