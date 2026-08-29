@@ -1,0 +1,83 @@
+const RPC = require('@xhayper/discord-rpc');
+
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '';
+
+class DiscordPresence {
+  constructor(settings) {
+    this.settings = settings;
+    this.client = null;
+    this.ready = false;
+  }
+
+  connect() {
+    if (!CLIENT_ID) {
+      console.warn('[discord] No DISCORD_CLIENT_ID set. Create a Discord application and set the ID before presence will show up.');
+      return;
+    }
+
+    this.client = new RPC.Client({ clientId: CLIENT_ID });
+
+    this.client.on('ready', () => {
+      this.ready = true;
+      console.log('[discord] Connected as', this.client.user?.username);
+    });
+
+    this.client.on('disconnected', () => {
+      this.ready = false;
+    });
+
+    this.client.login().catch((err) => {
+      console.error('[discord] Failed to connect:', err.message);
+    });
+  }
+
+  isReady() {
+    return this.ready;
+  }
+
+  async update(track) {
+    if (!this.ready || !this.client?.user) return;
+
+    if (!track || !track.title) {
+      await this.client.user.clearActivity().catch(() => {});
+      return;
+    }
+
+    const cfg = this.settings.all();
+    const activity = {
+      details: track.title.slice(0, 128),
+      state: (track.artist || 'Unknown artist').slice(0, 128),
+      largeImageKey: track.artwork || undefined,
+      largeImageText: (track.album || track.title).slice(0, 128),
+      smallImageKey: track.isPaused ? 'pause' : 'play',
+      smallImageText: track.isPaused ? 'Paused' : 'Playing',
+      instance: false,
+    };
+
+    if (cfg.showLyrics && track.lyrics) {
+      activity.state = track.lyrics.slice(0, 128);
+    }
+
+    if (cfg.showTimestamps && track.durationSec > 0 && !track.isPaused) {
+      const now = Date.now();
+      activity.startTimestamp = Math.round(now - track.positionSec * 1000);
+      activity.endTimestamp = Math.round(now + (track.durationSec - track.positionSec) * 1000);
+    }
+
+    if (cfg.showListenAlongButton && track.url) {
+      activity.buttons = [{ label: 'Listen Along', url: track.url }];
+    }
+
+    await this.client.user.setActivity(activity).catch((err) => {
+      console.error('[discord] setActivity failed:', err.message);
+    });
+  }
+
+  async clear() {
+    if (this.ready && this.client?.user) {
+      await this.client.user.clearActivity().catch(() => {});
+    }
+  }
+}
+
+module.exports = DiscordPresence;

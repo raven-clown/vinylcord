@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Vinylcord Overlay</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: transparent;
+    font-family: -apple-system, "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
+    overflow: hidden;
+  }
+  #card {
+    width: 300px;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(20, 20, 24, 0.72);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  #card.visible { opacity: 1; }
+  #glow {
+    position: absolute; inset: -40px;
+    background:
+      radial-gradient(circle at 50% 10%, rgba(255,95,95,0.35), transparent 60%),
+      radial-gradient(circle at 80% 70%, rgba(178,30,203,0.3), transparent 55%);
+    filter: blur(30px);
+    pointer-events: none;
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  #vinyl {
+    width: 160px; height: 160px; border-radius: 50%;
+    background: repeating-radial-gradient(circle at center, #17181a 0px, #17181a 2px, #1f2023 3px, #1f2023 4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    animation: spin 6s linear infinite;
+    animation-play-state: paused;
+    z-index: 1;
+  }
+  #vinyl.playing { animation-play-state: running; }
+  #label {
+    width: 92px; height: 92px; border-radius: 50%;
+    background: linear-gradient(135deg, #ff5f5f 0%, #b21ecb 100%);
+    background-size: cover; background-position: center;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 0 3px rgba(0,0,0,0.4);
+  }
+  #label::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #17181a; }
+  #meta { position: relative; z-index: 1; text-align: center; width: 100%; }
+  #title { font-size: 15px; font-weight: 700; color: #f2f3f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #artist { font-size: 13px; color: #949ba4; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @keyframes wave { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
+  #waveform {
+    position: relative; z-index: 1; width: 100%; height: 26px;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 2px;
+  }
+  .bar {
+    width: 3px; border-radius: 2px; transform-origin: bottom;
+    background: #8267f2;
+    animation: wave ease-in-out infinite;
+    animation-play-state: paused;
+  }
+  .bar.playing { animation-play-state: running; }
+  #progress-wrap { position: relative; z-index: 1; width: 100%; }
+  #progress-track { height: 3px; border-radius: 1.5px; background: rgba(255,255,255,0.12); position: relative; }
+  #progress-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 1.5px; background: #ffffff; width: 0%; }
+  #lyric {
+    position: relative; z-index: 1; font-size: 12px; color: #dbdee1;
+    font-style: italic; text-align: center; min-height: 16px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<div id="card">
+  <div id="glow"></div>
+  <div id="vinyl"><div id="label"></div></div>
+  <div id="meta">
+    <div id="title">Nothing playing</div>
+    <div id="artist"></div>
+  </div>
+  <div id="waveform"></div>
+  <div id="progress-wrap">
+    <div id="progress-track"><div id="progress-fill"></div></div>
+  </div>
+  <div id="lyric"></div>
+</div>
+
+<script>
+  const BAR_COUNT = 20;
+  const waveform = document.getElementById('waveform');
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = (35 + Math.round(Math.sin(i * 1.3) * 25 + 25)) + '%';
+    bar.style.animationDuration = (0.6 + (i % 5) * 0.15) + 's';
+    bar.style.animationDelay = ((i % 7) * 0.07) + 's';
+    waveform.appendChild(bar);
+  }
+
+  function fmt(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function connect() {
+    const ws = new WebSocket('ws://' + location.host);
+    ws.onmessage = (event) => {
+      try {
+        render(JSON.parse(event.data));
+      } catch {}
+    };
+    ws.onclose = () => setTimeout(connect, 2000);
+  }
+
+  function render(track) {
+    const card = document.getElementById('card');
+    const vinyl = document.getElementById('vinyl');
+    const bars = document.querySelectorAll('.bar');
+
+    if (!track || !track.title) {
+      card.classList.remove('visible');
+      return;
+    }
+
+    card.classList.add('visible');
+    document.getElementById('title').textContent = track.title;
+    document.getElementById('artist').textContent = track.artist || '';
+    document.getElementById('label').style.backgroundImage = track.artwork ? `url(${track.artwork})` : 'none';
+    document.getElementById('lyric').textContent = track.lyrics || '';
+
+    const playing = !track.isPaused;
+    vinyl.classList.toggle('playing', playing);
+    bars.forEach((b) => b.classList.toggle('playing', playing));
+
+    const pct = track.durationSec > 0 ? Math.min(100, (track.positionSec / track.durationSec) * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  connect();
+</script>
+
+</body>
+</html>
