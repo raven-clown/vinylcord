@@ -1,6 +1,6 @@
 {
   "name": "vinylcord",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Show what you're listening to on YouTube Music as a live Discord Rich Presence status.",
   "main": "src/main.js",
   "author": "",
