@@ -8,6 +8,7 @@ const DEFAULTS = {
   showTimestamps: true,
   showListenAlongButton: true,
   showLyrics: true,
+  togglePos: null,
 };
 
 class Settings {

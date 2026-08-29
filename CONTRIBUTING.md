@@ -5,21 +5,21 @@ Pull requests are welcome. This project is small on purpose, so please open an i
 ## Setup
 
 ```bash
-git clone <this repo>
+git clone https://github.com/raven-clown/vinylcord.git
 cd vinylcord
 npm install
 npm start
 ```
 
-You'll need a Discord application ID to see Rich Presence updates, see the README's "Getting started" section for how to get one.
+That runs against the shared default Discord application, so Rich Presence works immediately. See the README's "Building from source" section if you want to point it at your own Discord application instead.
 
 ## Where things live
 
 - `src/main.js` — the Electron main process: windows, tray, wiring everything together
-- `src/preload-ytmusic.js` — reads now-playing state out of the YouTube Music page. This is the part most likely to need a fix if Google changes the player's markup
+- `src/preload-ytmusic.js` — reads now-playing state out of the YouTube Music page and injects the settings panel into it. This is the part most likely to need a fix if Google changes the player's markup
 - `src/discordPresence.js` — talks to Discord over RPC
 - `src/overlayServer.js` and `src/overlay/overlay.html` — the local server and page for the OBS/Streamlabs overlay
-- `src/windows/` — the Settings window (HTML/CSS/JS, no framework)
+- `scripts/afterPack.js` — sets the app icon during packaging (see the comment in there for why this isn't left to electron-builder's default)
 
 ## Before opening a PR
 

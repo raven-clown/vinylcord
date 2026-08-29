@@ -1,11 +1,11 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, clipboard } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const DiscordPresence = require('./discordPresence');
 const OverlayServer = require('./overlayServer');
 const Settings = require('./settings');
 
 let ytWindow;
-let settingsWindow;
 let tray;
 let settings;
 let discord;
@@ -17,8 +17,10 @@ const ICON_PATH = path.join(__dirname, '..', 'assets', 'icon.png');
 
 function createYtWindow() {
   ytWindow = new BrowserWindow({
-    width: 1100,
-    height: 750,
+    width: 1360,
+    height: 860,
+    minWidth: 1000,
+    minHeight: 600,
     icon: ICON_PATH,
     autoHideMenuBar: true,
     webPreferences: {
@@ -30,6 +32,14 @@ function createYtWindow() {
 
   ytWindow.loadURL('https://music.youtube.com');
 
+  ytWindow.webContents.on('console-message', (_event, _level, message, line, sourceId) => {
+    console.log('[renderer]', message, `(${sourceId}:${line})`);
+  });
+
+  ytWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.log('[preload-error]', preloadPath, error);
+  });
+
   ytWindow.on('close', (event) => {
     if (!app.isQuitting) {
       event.preventDefault();
@@ -38,30 +48,10 @@ function createYtWindow() {
   });
 }
 
-function createSettingsWindow() {
-  if (settingsWindow) {
-    settingsWindow.show();
-    settingsWindow.focus();
-    return;
-  }
-
-  settingsWindow = new BrowserWindow({
-    width: 380,
-    height: 760,
-    resizable: false,
-    icon: ICON_PATH,
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, 'windows', 'settings-preload.js'),
-      contextIsolation: true,
-    },
-  });
-
-  settingsWindow.setMenu(null);
-  settingsWindow.loadFile(path.join(__dirname, 'windows', 'settings.html'));
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
-  });
+function showAndOpenPanel() {
+  ytWindow.show();
+  ytWindow.focus();
+  ytWindow.webContents.send('toggle-panel');
 }
 
 function createTray() {
@@ -70,8 +60,8 @@ function createTray() {
   tray.setToolTip('Vinylcord');
 
   const menu = Menu.buildFromTemplate([
-    { label: 'Open YouTube Music', click: () => ytWindow.show() },
-    { label: 'Settings', click: createSettingsWindow },
+    { label: 'Open Vinylcord', click: () => ytWindow.show() },
+    { label: 'Settings', click: showAndOpenPanel },
     { type: 'separator' },
     {
       label: 'Quit',
@@ -91,9 +81,6 @@ ipcMain.on('now-playing', (_event, track) => {
   lastTrack = track;
   discord.update(track);
   overlay.broadcast(track);
-  if (settingsWindow) {
-    settingsWindow.webContents.send('now-playing-preview', track);
-  }
 });
 
 ipcMain.handle('get-overlay-url', () => overlay.url());
@@ -110,6 +97,15 @@ ipcMain.handle('get-status', () => ({
   lastTrack,
 }));
 
+ipcMain.on('copy-to-clipboard', (_event, text) => {
+  clipboard.writeText(text);
+});
+
+ipcMain.on('quit-app', () => {
+  app.isQuitting = true;
+  app.quit();
+});
+
 app.whenReady().then(() => {
   settings = new Settings();
   discord = new DiscordPresence(settings);
@@ -119,6 +115,12 @@ app.whenReady().then(() => {
   createTray();
   discord.connect();
   overlay.start();
+
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+      console.error('[updater] check failed:', err.message);
+    });
+  }
 });
 
 app.on('window-all-closed', (event) => {

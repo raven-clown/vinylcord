@@ -1,6 +1,11 @@
 const RPC = require('@xhayper/discord-rpc');
 
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '';
+// This is the public Discord Application ID for Vinylcord itself - not
+// a secret (Rich Presence IDs are meant to be embedded in shipped
+// apps, the same way every user's Spotify shares one App ID). Set
+// DISCORD_CLIENT_ID to point at your own Discord application instead.
+const DEFAULT_CLIENT_ID = '1324729144424271974';
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID || DEFAULT_CLIENT_ID;
 
 class DiscordPresence {
   constructor(settings) {
@@ -68,9 +73,12 @@ class DiscordPresence {
       activity.buttons = [{ label: 'Listen Along', url: track.url }];
     }
 
-    await this.client.user.setActivity(activity).catch((err) => {
-      console.error('[discord] setActivity failed:', err.message);
-    });
+    console.log('[discord] setting activity:', JSON.stringify(activity));
+    await this.client.user.setActivity(activity)
+      .then(() => console.log('[discord] activity accepted'))
+      .catch((err) => {
+        console.error('[discord] setActivity failed:', err.message);
+      });
   }
 
   async clear() {

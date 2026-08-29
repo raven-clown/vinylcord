@@ -1,6 +1,6 @@
 {
   "name": "vinylcord",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Show what you're listening to on YouTube Music as a live Discord Rich Presence status.",
   "main": "src/main.js",
   "author": "",
@@ -8,13 +8,49 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "generate-icon": "node scripts/generate-icon.js"
+    "generate-icon": "node scripts/generate-icon.js",
+    "dist": "electron-builder --win"
   },
   "dependencies": {
     "@xhayper/discord-rpc": "^1.2.1",
+    "electron-updater": "^6.8.9",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "electron": "^44.0.0"
+    "electron": "^44.0.0",
+    "electron-builder": "^25.1.8",
+    "rcedit": "^5.0.2"
+  },
+  "build": {
+    "appId": "com.vinylcord.app",
+    "productName": "Vinylcord",
+    "files": [
+      "src/**/*",
+      "assets/icon.png",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "afterPack": "scripts/afterPack.js",
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Vinylcord"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "raven-clown",
+        "repo": "vinylcord"
+      }
+    ]
   }
 }
