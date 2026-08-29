@@ -95,10 +95,6 @@ const PANEL_HTML = `
     <div>
       <div class="vc-label">Display Options</div>
       <div class="vc-toggle-row">
-        <span>Show progress bar</span>
-        <label class="vc-switch"><input type="checkbox" id="vc-showProgressBar"><span class="vc-slider"></span></label>
-      </div>
-      <div class="vc-toggle-row">
         <span>Show timestamps</span>
         <label class="vc-switch"><input type="checkbox" id="vc-showTimestamps"><span class="vc-slider"></span></label>
       </div>
@@ -110,15 +106,6 @@ const PANEL_HTML = `
         <span>Show lyrics when available</span>
         <label class="vc-switch"><input type="checkbox" id="vc-showLyrics"><span class="vc-slider"></span></label>
       </div>
-    </div>
-
-    <div>
-      <div class="vc-label">Personalize</div>
-      <span style="font-size:12px; color:#949ba4;">Status line</span>
-      <div style="margin-top:6px;">
-        <input type="text" id="vc-statusLine" placeholder="Listening to">
-      </div>
-      <div class="vc-hint">Replaces "Listening to" — leave blank to use the default</div>
     </div>
 
     <div>
@@ -353,18 +340,14 @@ function injectPanel() {
     ipcRenderer.send('quit-app');
   });
 
-  const TOGGLE_IDS = ['showProgressBar', 'showTimestamps', 'showListenAlongButton', 'showLyrics'];
+  const TOGGLE_IDS = ['showTimestamps', 'showListenAlongButton', 'showLyrics'];
 
   ipcRenderer.invoke('get-settings').then((settings) => {
-    document.getElementById('vc-statusLine').value = settings.statusLine || '';
     for (const id of TOGGLE_IDS) {
       document.getElementById('vc-' + id).checked = Boolean(settings[id]);
     }
   });
 
-  document.getElementById('vc-statusLine').addEventListener('input', (e) => {
-    ipcRenderer.send('set-settings', { statusLine: e.target.value });
-  });
   for (const id of TOGGLE_IDS) {
     document.getElementById('vc-' + id).addEventListener('change', (e) => {
       ipcRenderer.send('set-settings', { [id]: e.target.checked });

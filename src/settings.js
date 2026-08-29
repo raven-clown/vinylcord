@@ -3,8 +3,6 @@ const path = require('path');
 const { app } = require('electron');
 
 const DEFAULTS = {
-  statusLine: 'Listening to',
-  showProgressBar: true,
   showTimestamps: true,
   showListenAlongButton: true,
   showLyrics: true,

@@ -24,6 +24,15 @@ class OverlayServer {
       ws.on('close', () => this.clients.delete(ws));
     });
 
+    this.server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`[overlay] port ${this.port} is already in use (another Vinylcord instance running?) - overlay disabled for this session`);
+      } else {
+        console.error('[overlay] server error:', err.message);
+      }
+      this.server = null;
+    });
+
     this.server.listen(this.port);
   }
 
